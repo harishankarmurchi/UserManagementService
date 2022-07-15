@@ -31,7 +31,7 @@ namespace Repository.Repos
                     await _dbContext.SaveChangesAsync();
                     return user;
                 }
-                throw new Exception("Username already exist")
+                throw new Exception("Username already exist");
             }catch(Exception ex)
             {
                 throw;
