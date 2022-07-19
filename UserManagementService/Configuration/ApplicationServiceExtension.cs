@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Consul;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Repository;
@@ -56,6 +57,39 @@ namespace UserManagementService.Configuration
             services.AddScoped<IUserRepository, UserRepository>();
 
             return services;
+        }
+        public static IServiceCollection AddConsulConfig(this IServiceCollection service,IConfiguration configuration)
+        {
+            var consulAddress = configuration["ConsulUrl"];
+            service.AddSingleton<IConsulClient, ConsulClient>(c => new ConsulClient(con => {
+                con.Address = new Uri(consulAddress);
+            }));
+            return service;
+
+        }
+
+        public static IApplicationBuilder UseConsul(this IApplicationBuilder app)
+        {
+            var consulClient = app.ApplicationServices.GetRequiredService<IConsulClient>();
+            var logger = app.ApplicationServices.GetRequiredService<ILoggerFactory>().CreateLogger("");
+            var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
+
+            var registration = new AgentServiceRegistration()
+            {
+                ID = "UserManagement",
+                Name = "UserManagement",
+                Address = "localhost",
+                Port = 44349
+            };
+            logger.LogInformation("Registered with consul");
+            consulClient.Agent.ServiceDeregister(registration.ID).ConfigureAwait(true);
+            consulClient.Agent.ServiceRegister(registration).ConfigureAwait(true);
+            lifetime.ApplicationStopping.Register(() => {
+                logger.LogInformation("deregister");
+                consulClient.Agent.ServiceDeregister(registration.ID).ConfigureAwait(true);
+            });
+            return app;
+
         }
     }
 }
