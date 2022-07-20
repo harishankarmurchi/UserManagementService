@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Repository.Repos
 {
-    public class UserRepository:IUserRepository
+    public class UserRepository : IUserRepository
     {
         private readonly UserDbContext _dbContext;
         public UserRepository(UserDbContext dbContext)
@@ -32,7 +32,8 @@ namespace Repository.Repos
                     return user;
                 }
                 throw new Exception("Username already exist");
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw;
             }
@@ -57,11 +58,12 @@ namespace Repository.Repos
                     throw new Exception("User Not found");
                 }
 
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw;
             }
-            
+
 
         }
 
@@ -70,6 +72,36 @@ namespace Repository.Repos
             try
             {
                 return await _dbContext.Roles.ToListAsync();
+
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<User> UpdateToken(Guid token, int Id)
+        {
+            try
+            {
+                var user = _dbContext.Users.FirstOrDefault(x => x.Id == Id);
+                user.RefreshToken = token;
+                _dbContext.Users.Update(user);
+                await _dbContext.SaveChangesAsync();
+                return user;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+        }
+
+        public async Task<User> ValidateRefreshToken(Guid refreshToken)
+        {
+            try
+            {
+                return await _dbContext.Users.Include("Roles").FirstOrDefaultAsync(x => x.RefreshToken == refreshToken);
 
             }catch(Exception ex)
             {

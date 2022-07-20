@@ -24,7 +24,7 @@ namespace Services.Services
             _userRepo = userRepo;
         }
 
-        public async Task<string> AddUser(UserVM userVM)
+        public async Task<TokenVM> AddUser(UserVM userVM)
         {
             try
             {
@@ -41,7 +41,7 @@ namespace Services.Services
                 };
 
                 var result = await _userRepo.CreateUser(user);
-                return GenerateJwtToken(result);
+                return await GenerateJwtToken(result);
                  
 
             }
@@ -50,7 +50,7 @@ namespace Services.Services
                 throw;
             }
         }
-        private string GenerateJwtToken(User user)
+        private async Task<TokenVM> GenerateJwtToken(User user)
         {
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:key"]));
@@ -68,12 +68,18 @@ namespace Services.Services
                   expires: DateTime.Now.AddMinutes(120),
                   signingCredentials: cred
                 );
-
+            var refreshToken = Guid.NewGuid();
+            await _userRepo.UpdateToken(refreshToken, user.Id);
             var encode = new JwtSecurityTokenHandler().WriteToken(token);
-            return encode;
+            return new TokenVM
+            {
+                RefreshToken = refreshToken.ToString(),
+                Token = encode
+
+            };
         }
 
-        public async Task<string> LoginUser(LoginVM loginVM)
+        public async Task<TokenVM> LoginUser(LoginVM loginVM)
         {
             try
             {
@@ -83,7 +89,7 @@ namespace Services.Services
                     Password = loginVM.Password
                 };
                 var result= await _userRepo.ValidateUser(user);
-                return GenerateJwtToken(result);
+                return await GenerateJwtToken(result);
             }catch(Exception ex)
             {
                 throw;
@@ -101,6 +107,20 @@ namespace Services.Services
                     roles.Add(item.Name);
                 }
                 return roles;
+            }catch(Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<TokenVM> GetToken(string refreshToken)
+        {
+            try
+            {
+
+                var user=await _userRepo.ValidateRefreshToken(Guid.Parse(refreshToken));
+                return await GenerateJwtToken(user);
+
             }catch(Exception ex)
             {
                 throw;

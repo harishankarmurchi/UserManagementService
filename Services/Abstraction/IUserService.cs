@@ -9,8 +9,9 @@ namespace Services.Abstraction
 {
     public interface IUserService
     {
-        Task<string> AddUser(UserVM userVM);
-        Task<string> LoginUser(LoginVM loginVM);
+        Task<TokenVM> AddUser(UserVM userVM);
+        Task<TokenVM> LoginUser(LoginVM loginVM);
         Task<List<string>> GetAllRoles();
+        Task<TokenVM> GetToken(string refreshToken);
     }
 }

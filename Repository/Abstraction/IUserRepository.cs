@@ -12,5 +12,8 @@ namespace Repository.Abstraction
         Task<User> CreateUser(User user);
         Task<User> ValidateUser(User user);
         Task<List<Role>> GetRoles();
+        Task<User> UpdateToken(Guid token,int Id);
+
+        Task<User> ValidateRefreshToken(Guid refreshToken);
     }
 }

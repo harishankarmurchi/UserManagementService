@@ -18,9 +18,9 @@ namespace UserManagementService.Controllers
 
         [HttpPost]
         [Route("login")]
-        public async Task<Response<string>> Login([FromBody] LoginVM loginVM)
+        public async Task<Response<TokenVM>> Login([FromBody] LoginVM loginVM)
         {
-            var response = new Response<string>();
+            var response = new Response<TokenVM>();
             try
             {
                 var result= await _userService.LoginUser(loginVM);
@@ -38,9 +38,9 @@ namespace UserManagementService.Controllers
 
         [HttpPost]
         [Route("register")]
-        public async Task<Response<string>> CreateUser([FromBody] UserVM uservm)
+        public async Task<Response<TokenVM>> CreateUser([FromBody] UserVM uservm)
         {
-            var response = new Response<string>();
+            var response = new Response<TokenVM>();
             try
             {
                 var result = await _userService.AddUser(uservm);
@@ -74,5 +74,26 @@ namespace UserManagementService.Controllers
             }
             return response;
         }
+
+        [HttpGet]
+        [Route("refresh")]
+        public async Task<Response<TokenVM>> GenerateToken(string refreshtoken)
+        {
+            var response = new Response<TokenVM>();
+            try
+            {
+                var result = await _userService.GetToken(refreshtoken);
+                response.StatusCode = (int)HttpStatusCode.OK;
+                response.Data = result;
+
+            }
+            catch (Exception ex)
+            {
+                response.StatusCode = (int)HttpStatusCode.BadRequest;
+                response.Message = ex.Message;
+            }
+            return response;
+        }
+
     }
 }
