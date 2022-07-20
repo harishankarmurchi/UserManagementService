@@ -13,6 +13,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddRequiredServices(configuration);
+builder.Services.AddConsulConfig(configuration);
 
 var app = builder.Build();
 
@@ -29,4 +30,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+app.Start();
+app.UseConsul(app);
+app.WaitForShutdown();
