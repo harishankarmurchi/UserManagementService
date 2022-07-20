@@ -1,5 +1,8 @@
 ﻿using Consul;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Repository;
@@ -68,18 +71,24 @@ namespace UserManagementService.Configuration
 
         }
 
-        public static IApplicationBuilder UseConsul(this IApplicationBuilder app)
+        public static IApplicationBuilder UseConsul(this IApplicationBuilder app,IHost host)
         {
             var consulClient = app.ApplicationServices.GetRequiredService<IConsulClient>();
             var logger = app.ApplicationServices.GetRequiredService<ILoggerFactory>().CreateLogger("");
             var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
 
+            var features = host.Services.GetService<IServer>();
+            var addresses = features.Features.Get<IServerAddressesFeature>();
+            var address = addresses.Addresses.Last();
+
+            var url = new Uri(address);
+
             var registration = new AgentServiceRegistration()
             {
-                ID = "UserManagement",
+                ID = "UserManagement-"+url.Port.ToString(),
                 Name = "UserManagement",
-                Address = "localhost",
-                Port = 44349
+                Address = $"{url.Host}",
+                Port = url.Port
             };
             logger.LogInformation("Registered with consul");
             consulClient.Agent.ServiceDeregister(registration.ID).ConfigureAwait(true);
