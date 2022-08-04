@@ -10,6 +10,7 @@ namespace Models.ViewModels
     {
         public string Token { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = String.Empty;
+        public string Role { get; set; }
 
     }
 }

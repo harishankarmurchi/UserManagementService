@@ -74,7 +74,8 @@ namespace Services.Services
             return new TokenVM
             {
                 RefreshToken = refreshToken.ToString(),
-                Token = encode
+                Token = encode,
+                Role= user.Role.Name
 
             };
         }
